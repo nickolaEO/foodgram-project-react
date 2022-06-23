@@ -1,6 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 
-from users.models import CustomUser
+
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -16,6 +18,7 @@ class Tag(models.Model):
         default='#FF0000'
     )
     slug = models.SlugField(
+        'Slug тега',
         max_length=200,
         unique=True
     )
@@ -48,7 +51,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор'
