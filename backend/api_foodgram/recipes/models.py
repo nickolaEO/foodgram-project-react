@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core import validators
 from django.db import models
 
 
@@ -62,13 +63,21 @@ class Recipe(models.Model):
     )
     image = models.ImageField('Изображение', upload_to='recipe_img/')
     text = models.TextField('Описание')
-    ingredients = models.ManyToManyField(Ingredient,
-                                         verbose_name='Ингредиенты',
-                                         through='RecipeIngredient')
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        verbose_name='Ингредиенты',
+        through='RecipeIngredient'
+    )
     tags = models.ManyToManyField(Tag, verbose_name='Теги')
-    cooking_time = models.IntegerField('Время приготовления')
+    cooking_time = models.PositiveSmallIntegerField(
+        verbose_name='Время приготовления, мин',
+        validators=(validators.MinValueValidator(
+            1, message='Минимальное время приготовления 1 минута'),
+        )
+    )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -89,9 +98,15 @@ class RecipeIngredient(models.Model):
         related_name='amount',
         verbose_name='Ингредиент'
     )
-    amount = models.IntegerField('Количество')
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество',
+        validators=(validators.MinValueValidator(
+            1, message='Минимальное количество ингредиентов 1'),
+        )
+    )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Количество ингредиента'
         verbose_name_plural = 'Количество ингредиентов'
         constraints = [
