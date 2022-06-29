@@ -1,10 +1,18 @@
+import io
+
+from django.db.models import F, Sum
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import FileResponse
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework.response import Response
 from rest_framework import filters, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
 
-from recipes.models import Ingredient, Tag, Recipe, Favorite, Shopping
+from recipes.models import Ingredient, Tag, Recipe, RecipeIngredient, Favorite, Shopping
 from .mixins import ListRetrieveViewSet
 from .serializers import (IngredientSerializer,
                           TagSerializer,
@@ -77,3 +85,45 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == "POST":
             return post(request, pk, Shopping, RecipeFollowSerializer)
         return delete(request, pk, Shopping)
+
+
+class ShoppingCardView(APIView):
+    def get(self, request):
+        user = request.user
+        shopping_list = RecipeIngredient.objects.filter(
+            recipe__cart__user=user).values(
+            name=F("ingredient__name"),
+            unit=F("ingredient__measurement_unit")
+        ).annotate(amount=Sum("amount"))
+        font = "Tantular"
+        pdfmetrics.registerFont(
+            TTFont("Tantular", "Tantular.ttf", "UTF-8")
+        )
+        buffer = io.BytesIO()
+        pdf_file = canvas.Canvas(buffer)
+        pdf_file.setFont(font, 24)
+        pdf_file.drawString(
+            150,
+            800,
+            "Список покупок."
+        )
+        pdf_file.setFont(font, 14)
+        from_bottom = 750
+        for number, ingredient in enumerate(shopping_list, start=1):
+            pdf_file.drawString(
+                50,
+                from_bottom,
+                f'{number}.  {ingredient["name"]} - {ingredient["amount"]} '
+                f'{ingredient["unit"]}'
+            )
+            from_bottom -= 20
+            if from_bottom <= 50:
+                from_bottom = 800
+                pdf_file.showPage()
+                pdf_file.setFont(font, 14)
+        pdf_file.showPage()
+        pdf_file.save()
+        buffer.seek(0)
+        return FileResponse(
+            buffer, as_attachment=True, filename="shopping_list.pdf"
+        )
