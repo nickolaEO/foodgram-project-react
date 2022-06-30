@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
 
-
 User = get_user_model()
 
 
@@ -113,7 +112,7 @@ class RecipeIngredient(models.Model):
             models.UniqueConstraint(fields=['recipe', 'ingredient'],
                                     name='unique_recipe_ingredient')
         ]
-        db_table = 'recipes_recipe_ingredient'
+        db_table = 'api_recipe_ingredient'
 
 
 class Favorite(models.Model):

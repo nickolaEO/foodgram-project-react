@@ -5,11 +5,10 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 
-from .models import Subscribe
-from api.serializers import FollowSerializer
 from api.pagination import CustomPageNumberPagination
+from api.serializers import FollowSerializer
+from .models import Subscribe
 
 User = get_user_model()
 
@@ -73,4 +72,3 @@ class CustomUserViewSet(UserViewSet):
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
-

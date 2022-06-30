@@ -2,9 +2,8 @@ import csv
 import os
 
 from django.apps import apps
-from django.core.management.base import BaseCommand, CommandError
-
 from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
@@ -36,7 +35,7 @@ class Command(BaseCommand):
 
     def get_csv_file(self, filename):
         file_path = os.path.join(
-            os.path.dirname((os.path.dirname(settings.BASE_DIR))),
+            os.path.dirname(settings.BASE_DIR),
             'data',
             filename
         )
