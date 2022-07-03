@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from .models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from .utils import recipe_ingredient_create
 from users.models import Subscribe
 from users.serializers import UserSerializer
@@ -71,7 +70,7 @@ class FollowSerializer(serializers.ModelSerializer):
     last_name = serializers.ReadOnlyField(source='author.last_name')
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.ReadOnlyField(source='author.recipes.count')
 
     class Meta:
         model = Subscribe
@@ -91,9 +90,6 @@ class FollowSerializer(serializers.ModelSerializer):
         if limit:
             queryset = queryset[:int(limit)]
         return RecipeFollowSerializer(queryset, many=True).data
-
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
@@ -147,14 +143,11 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
-        ingredients_list = []
-        for ingredient in ingredients:
-            ingredient_id = ingredient['id']
-            if ingredient_id in ingredients_list:
-                ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-                raise serializers.ValidationError(
-                    f'Ингредиент {ingredient.name} выбран более 1 раза')
-            ingredients_list.append(ingredient_id)
+        ingredients_list = [ingredient['id'] for ingredient in ingredients]
+        if len(ingredients_list) != len(set(ingredients_list)):
+            raise serializers.ValidationError(
+                'Проверьте, какой-то ингредиент был выбран более 1 раза'
+            )
         return data
 
     def create(self, validated_data):
