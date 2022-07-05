@@ -35,7 +35,7 @@ class Command(BaseCommand):
 
     def get_csv_file(self, filename):
         file_path = os.path.join(
-            os.path.dirname(settings.BASE_DIR),
+            settings.BASE_DIR,
             'data',
             filename
         )
