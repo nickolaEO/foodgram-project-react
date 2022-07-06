@@ -1,4 +1,4 @@
-![Foodgram project](https://github.com/nickolaeo/yamdb_final/actions/workflows/yamdb_workflow.yml/badge.svg)
+![Foodgram project](https://github.com/nickolaeo/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
 # **Foodgram project**
 
@@ -52,11 +52,96 @@
 
 - [Python 3.8.8](https://www.python.org/downloads/release/python-388/)
 - [Django 2.2.16](https://www.djangoproject.com/download/)
-- [Django Rest Framework 3.12.4](https://www.django-rest-framework.org/)
+- [Django Rest Framework 3.13.1](https://www.django-rest-framework.org/)
+- [PostgreSQL 13.0](https://www.postgresql.org/download/)
+- [gunicorn 20.0.4](https://pypi.org/project/gunicorn/)
+- [nginx 1.21.3](https://nginx.org/ru/download.html)
+
+# Контейнер
+
+- [Docker 20.10.14](https://www.docker.com/)
+- [Docker Compose 2.4.1](https://docs.docker.com/compose/)
+
+# URL's
+
+- http://51.250.106.196
+- http://51.250.106.196/admin
+- http://51.250.106.196/api
+
+# Документация
+
+Для просмотра документации к API перейдите по адресу:
+- http://51.250.106.196/api/redoc
+
+# Локальная установка
+
+Клонируйте репозиторий и перейдите в него в командной строке:
+```sh
+git clone https://github.com/nickolaEO/foodgram-project-react.git && cd foodgram-project-react
+```
+Перейдите в директорию с файлом _Dockerfile_ и запустите сборку образа:
+```sh
+cd backend && docker build -t <DOCKER_USERNAME>/foodgram:<tag> .
+```
+Перейдите в директорию с файлом _docker-compose.yaml_:
+```sh
+cd ../infra
+```
+Создайте .env файл:
+```sh
+#.env
+DB_ENGINE=<django.db.backends.postgresql>
+DB_NAME=<имя базы данных postgres>
+DB_USER=<пользователь бд>
+DB_PASSWORD=<пароль>
+DB_HOST=<db>
+DB_PORT=<5432>
+SECRET_KEY=<секретный ключ проекта django>
+```
+Запустите контейнеры:
+```sh
+docker-compose up -d --build
+```
+После успешного запуска контейнеров выполните миграции в проекте:
+```sh
+docker-compose exec backend python manage.py makemigrations users
+```
+```sh
+docker-compose exec backend python manage.py makemigrations recipes
+```
+```sh
+docker-compose exec backend python manage.py migrate
+```
+Создайте суперпользователя:
+```sh
+docker-compose exec backend python manage.py createsuperuser
+```
+Соберите статику:
+```sh
+docker-compose exec backend python manage.py collectstatic --no-input
+```
+Наполните БД заготовленными данными:
+
+- Ингредиенты:
+```sh
+docker-compose exec backend python manage.py importcsv --filename ingredients.csv --model_name Ingredient --app_name recipes
+```
+- Теги:
+```sh
+docker-compose exec backend python manage.py importcsv --filename tags.csv --model_name Tag --app_name recipes
+```
+Создайте дамп (резервную копию) базы данных:
+```sh
+docker-compose exec backend python manage.py dumpdata > fixtures.json
+```
+Для остановки контейнеров и удаления всех зависимостей воспользуйтесь командой:
+```sh
+docker-compose down -v
+```
 
 # Примеры запросов
 
-**GET**: http://127.0.0.1:8000/api/v1/categories/  
+**GET**: http://127.0.0.1:8000/api/users/  
 Пример ответа:
 ```json
 {

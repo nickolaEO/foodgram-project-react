@@ -1,10 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .mixins import ListRetrieveViewSet
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -24,8 +24,7 @@ class IngredientViewSet(ListRetrieveViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name',)
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -37,11 +36,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         is_favorited = self.request.query_params.get('is_favorited')
         if is_favorited is not None and int(is_favorited) == 1:
-            return Recipe.objects.filter(favorite__user=self.request.user)
+            return Recipe.objects.filter(favorites__user=self.request.user)
         is_in_shopping_cart = self.request.query_params.get(
             'is_in_shopping_cart')
         if is_in_shopping_cart is not None and int(is_in_shopping_cart) == 1:
-            return Recipe.objects.filter(shopping__user=self.request.user)
+            return Recipe.objects.filter(cart__user=self.request.user)
         return Recipe.objects.all()
 
     def destroy(self, request, *args, **kwargs):

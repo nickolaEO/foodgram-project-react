@@ -56,6 +56,11 @@ class Command(BaseCommand):
                     _model(name=row[0], measurement_unit=row[1])
                     for row in reader
                 )
+                if 'tags.csv' in filename:
+                    bulk_create_data = (
+                        _model(name=row[0], color=row[1], slug=row[2])
+                        for row in reader
+                    )
                 _model.objects.bulk_create(bulk_create_data)
                 line_count = _model.objects.count()
             self.stdout.write(
