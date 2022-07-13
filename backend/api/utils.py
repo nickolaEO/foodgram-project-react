@@ -1,6 +1,6 @@
 import io
 
-from django.db.models import F, Sum
+from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from reportlab.pdfbase import pdfmetrics
@@ -18,9 +18,11 @@ class ShoppingCardView(APIView):
         user = request.user
         shopping_list = RecipeIngredient.objects.filter(
             recipe__cart__user=user).values(
-            name=F('ingredient__name'),
-            unit=F('ingredient__measurement_unit')
-        ).annotate(amount=Sum('amount'))
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(
+            amount=Sum('amount')
+        ).order_by()
         font = 'Tantular'
         pdfmetrics.registerFont(
             TTFont('Tantular', 'Tantular.ttf', 'UTF-8')
@@ -39,8 +41,9 @@ class ShoppingCardView(APIView):
             pdf_file.drawString(
                 50,
                 from_bottom,
-                f'{number}.  {ingredient["name"]} - {ingredient["amount"]} '
-                f'{ingredient["unit"]}'
+                (f'{number}.  {ingredient["ingredient__name"]} - '
+                 f'{ingredient["amount"]} '
+                 f'{ingredient["ingredient__measurement_unit"]}')
             )
             from_bottom -= 20
             if from_bottom <= 50:
